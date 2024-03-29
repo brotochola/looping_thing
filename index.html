@@ -1,0 +1,146 @@
+<html>
+
+<head>
+
+</head>
+
+<body onload="init()">
+
+    <button id="playBut" onclick="playAll()">play</button>
+
+    <div id="buttonContainer">
+
+
+
+    </div>
+
+    <p>current time: <span id="time"></span></p>
+
+    <script>
+
+        var timer = 0
+        var actx = new (AudioContext || webkitAudioContext)()
+        var srcs = ["80.wav", "120.wav", "160.wav"]
+        var audioDatas = []
+        var time = document.querySelector("#time")
+        var playing = false
+        // var srcNodes = [] // global so we can access them from handlers
+        function init() {
+            for (let src of srcs) {
+
+                createButton(src)
+
+                fetch(src, { mode: "cors" }).then((resp) => { return resp.arrayBuffer() }).then(buffer => {
+                    decode(buffer, src)
+                });
+            }
+
+
+            // Simple example control
+            document.querySelector("#playBut").onclick = function () {
+                for (let audio of audioDatas) {
+                    if (audio.srcNode) {
+                        audio.srcNode.stop();
+                        audio.srcNode = null;
+                        this.innerText = "Play";
+                        playing = false
+                    } else {
+                        // debugger
+                        playing = true
+                        playLoop(audio);
+                        this.innerText = "Stop";
+                    }
+                }
+
+            };
+
+            gameLoop()
+
+        }
+
+
+        function createButton(src) {
+            let strippedSrc =  src.split(".")[0]
+            document.querySelector("#buttonContainer").innerHTML += `<button onclick="mute('${strippedSrc}', this)" class="muteButton file_${strippedSrc}"> mute ${strippedSrc}</button>`
+        }
+        function mute(strippedSrc, button) {
+
+            console.log(strippedSrc, button)
+
+            let audio = audioDatas.filter(k => k.src == strippedSrc)[0]
+
+            if(!audio){
+                return console.warn(strippedSrc+" COULD NOT BE MUTED")
+            }
+
+
+            if (audio.muted) {
+                audio.gainNode.gain.value = 1
+                button.innerText = "mute " + strippedSrc
+            } else {
+                audio.gainNode.gain.value = -1
+                button.innerText = "unmute "+ strippedSrc 
+            }
+
+
+            audio.muted = !audio.muted
+
+        }
+
+        function gameLoop() {
+
+            if (!playing) {
+                time.innerHTML = null
+
+            } else {
+                let curTime = (performance.now() - timer) / 1000
+
+                time.innerText = (curTime % audioDatas[0]?.duration).toFixed(2)
+            }
+
+            requestAnimationFrame(gameLoop)
+        }
+
+
+
+
+        function decode(buffer, src) {
+
+            actx.decodeAudioData(buffer, abuffer => {
+                let audio = { src: src.split(".")[0], abuffer, srcNode: null, duration: abuffer.duration, muted: false }
+                audioDatas.push(audio)
+            });
+        }
+
+        // Sets up a new source node as needed as stopping will render current invalid
+        function playLoop(audio) {
+
+            timer = performance.now()
+
+
+
+            let srcNode = actx.createBufferSource();  // create audio source
+            srcNode.buffer = audio.abuffer;             // use decoded buffer
+            srcNode.connect(actx.destination);    // create output
+            srcNode.loop = true;                  // takes care of perfect looping
+            audio.srcNode = srcNode;  // create a reference for control buttons
+            srcNode.start(0, 0);                      // play...
+
+
+
+
+
+            let gainNode = actx.createGain()
+            // gainNode.gain.value =1 // 10 %
+            gainNode.connect(actx.destination)
+
+            // now instead of connecting to aCtx.destination, connect to the gainNode
+            srcNode.connect(gainNode)
+            audio.gainNode = gainNode
+        }
+
+
+    </script>
+</body>
+
+</html>
