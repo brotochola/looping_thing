@@ -1,6 +1,7 @@
 <html>
 
 <head>
+    <script src="bpmDetector.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap"
@@ -20,9 +21,9 @@
             padding: 10px;
         }
 
-        button{
+        button {
             border-radius: 5px;
-            padding:5px;
+            padding: 5px;
             border-width: 1px;
         }
 
@@ -44,23 +45,23 @@
 
         .track .removeButton {
             background-color: darkred;
-            color:white;
+            color: white;
             font-weight: bold;
-            border:none;
-            margin-left:50px;
-            height:30px;
-            width:30px;
-            cursor:pointer;
+            border: none;
+            margin-left: 50px;
+            height: 30px;
+            width: 30px;
+            cursor: pointer;
         }
 
-        .track.muted .muteButton{
-            background:red;
-            color:white;
-            
+        .track.muted .muteButton {
+            background: red;
+            color: white;
+
         }
 
-        .track .volumeInput{
-            margin-left:20px;
+        .track .volumeInput {
+            margin-left: 20px;
         }
 
         #trackContainer {
@@ -135,7 +136,7 @@
             gameLoop()
 
         }
-        
+
         function playPauseAll() {
             for (let audio of audiosArray) {
                 if (audio.srcNode) {
@@ -167,7 +168,7 @@
             }
             reader.readAsArrayBuffer(fileInput.files[0]);
 
-            if (playin) {
+            if (playing) {
                 playPauseAll()
             }
 
