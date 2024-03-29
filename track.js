@@ -39,7 +39,7 @@ class Track {
   decode(buffer) {
     this.actx.decodeAudioData(buffer, (abuffer) => {
       this.abuffer = abuffer;
-      this.detectBPMAndPutItInTheLabel();
+      
       this.duration = abuffer.duration;
       this.createTrackElements();
     });
@@ -77,26 +77,20 @@ class Track {
     this.volumeInput.step = 0.01;
     this.volumeInput.value = 1;
 
-    this.bpmLabel = document.createElement("span");
-    this.bpmLabel.classList.add("bpmLabel");
-    this.bpmLabel.innerHTML = this.detectedBPM?this.detectedBPM + " BPM":""
+    // this.bpmLabel = document.createElement("span");
+    // this.bpmLabel.classList.add("bpmLabel");
+    // this.bpmLabel.innerHTML = this.detectedBPM?this.detectedBPM + " BPM":""
 
     this.div.appendChild(this.label);
     this.div.appendChild(this.button);
     this.div.appendChild(this.labelDuration);
     this.div.appendChild(this.volumeInput);
-    this.div.appendChild(this.bpmLabel);
+    // this.div.appendChild(this.bpmLabel);
     this.div.appendChild(this.removeButton);
 
     this.container.appendChild(this.div);
   }
-  detectBPMAndPutItInTheLabel() {
-    try {
-     this.detectedBPM = detectBPM(this.abuffer);
-    } catch (e) {
-      console.warn(e);
-    }
-  }
+
 
   handleChangeVolume(e) {
     ((this.gainNode || {}).gain || {}).value = e.target.value;
