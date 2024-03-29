@@ -1,102 +1,190 @@
 <html>
 
 <head>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap"
+        rel="stylesheet">
     <style>
+        * {
+            font-family: Noto Sans;
+        }
+
         .muteButton {
             display: block;
-            margin: 10px
+            margin: 10px;
+            margin-right: 20px;
         }
 
         body {
             padding: 10px;
+        }
+
+        button{
+            border-radius: 5px;
+            padding:5px;
+            border-width: 1px;
+        }
+
+        .track {
+            border: 1px solid lightgray;
+            border-radius: 5px;
+            display: flex;
+            flex-direction: row;
+            justify-content: flex-start;
+            padding: 5px;
+            align-items: center;
+            padding-left: 10px;
+        }
+
+        .track .label {
+            width: 110px;
+            text-transform: capitalize;
+        }
+
+        .track .removeButton {
+            background-color: darkred;
+            color:white;
+            font-weight: bold;
+            border:none;
+            margin-left:50px;
+            height:30px;
+            width:30px;
+            cursor:pointer;
+        }
+
+        .track.muted .muteButton{
+            background:red;
+            color:white;
+            
+        }
+
+        .track .volumeInput{
+            margin-left:20px;
+        }
+
+        #trackContainer {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            gap: 5px;
+        }
+
+        #fileInput {
+            display: none
         }
     </style>
 </head>
 
 <body onload="init()">
 
-    <button id="playBut" onclick="playAll()">play</button>
+    <button id="playBut" onclick="playPauseAll()">Play</button>
+    <p>current time: <span id="time"></span></p>
+    <button id="addTrack" onclick="addTrack()"> Add Track</button>
+    <input type="file" accept="audio" id="fileInput" onchange="handleFileChange(event)" />
     <br><br>
-    <div id="buttonContainer">
+    <div id="trackContainer">
 
 
 
     </div>
 
-    <p>current time: <span id="time"></span></p>
+
+
+    <script src="track.js"></script>
 
     <script>
 
         var timer = 0
         var actx = new (AudioContext || webkitAudioContext)()
-        var srcs = [{ id: "piano", src: "wavs/!piano.wav" }, { id: "percu", src: "wavs/!percu.wav" }, { id: "bajo", src: "wavs/!bajo.wav" }]
-        var audioDatas = []
+        var srcs = [
+            { id: "piano", src: "wavs/!piano.wav" },
+            { id: "percu", src: "wavs/!percu.wav" },
+            { id: "bajo", src: "wavs/!bajo.wav" },
+            //  { id: "piano2", src: "wavs/!piano.wav" },
+            //  { id: "piano3", src: "wavs/!piano.wav" },
+            //  { id: "piano4", src: "wavs/!piano.wav" },
+            //  { id: "piano5", src: "wavs/!piano.wav" },
+            //  { id: "piano6", src: "wavs/!piano.wav" },
+            //  { id: "piano7", src: "wavs/!piano.wav" },
+            //  { id: "percu2", src: "wavs/!percu.wav" }, 
+            //  { id: "bajo2", src: "wavs/!bajo.wav" }
+        ]
+        var audiosArray = []
         var time = document.querySelector("#time")
+        var fileInput = document.querySelector("#fileInput")
+        var trackcontainer = document.querySelector("#trackContainer")
         var playing = false
-        // var srcNodes = [] // global so we can access them from handlers
+
+
+
+
         function init() {
+
+
             for (let obj of srcs) {
-
-
-
-                fetch(obj.src, { mode: "cors" }).then((resp) => { return resp.arrayBuffer() }).then(buffer => {
-                    decode(buffer, obj)
-                });
+                audiosArray.push(new Track(obj.id, obj.src, actx, trackcontainer))
+                // fetch(obj.src, { mode: "cors" }).then(resp => resp.arrayBuffer()).then(buffer => {
+                //     decode(buffer, obj)
+                // });
             }
 
 
-            // Simple example control
-            document.querySelector("#playBut").onclick = function () {
-                for (let audio of audioDatas) {
-                    if (audio.srcNode) {
-                        audio.srcNode.stop();
-                        audio.srcNode = null;
-                        this.innerText = "Play";
-                        playing = false
-                    } else {
-                        // debugger
-                        playing = true
-                        playLoop(audio);
-                        this.innerText = "Stop";
-                    }
-                }
 
-            };
 
             gameLoop()
 
         }
+        
+        function playPauseAll() {
+            for (let audio of audiosArray) {
+                if (audio.srcNode) {
+                    audio.srcNode.stop();
+                    audio.srcNode = null;
+                    playBut.innerText = "Play";
+                    playing = false
+                } else {
+                    // debugger
+                    playing = true
+                    audio.playLoop()
+                    playBut.innerText = "Stop";
+                }
+            }
+
+        }
+
+        function handleFileChange(e) {
 
 
-        function createButton(audio) {
 
+            let reader = new FileReader();
+            reader.onload = () => {
 
-            document.querySelector("#buttonContainer").innerHTML += `   <button onclick="mute('${audio.id}', this)" class="muteButton file_${audio.id}"> MUTE ${audio.id}</button> duration:${audio.duration}`
+                let arrayBuffer = reader.result;
+                let id = fileInput.files[0].name
+                audiosArray.push(new Track(id, null, actx, trackcontainer, arrayBuffer))
+
+            }
+            reader.readAsArrayBuffer(fileInput.files[0]);
+
+            if (playin) {
+                playPauseAll()
+            }
+
+        }
+        function addTrack() {
+            fileInput.click()
         }
 
 
-
-        function mute(id, button) {
-
-            
-
-            let audio = audioDatas.filter(k => k.id == id)[0]
+        function mute(id) {
+            let audio = audiosArray.filter(k => k.id == id)[0]
 
             if (!audio) {
                 return console.warn(audio.id + " COULD NOT BE MUTED")
             }
 
-
-            if (audio.muted) {
-                audio.gainNode.gain.value = 1
-                button.innerText = "MUTE  " + audio.id
-            } else {
-                audio.gainNode.gain.value = -1
-                button.innerText = "UNMUTE " + audio.id
-            }
-
-
-            audio.muted = !audio.muted
+            audio.mute()
 
         }
 
@@ -108,50 +196,13 @@
             } else {
                 let curTime = (performance.now() - timer) / 1000
 
-                time.innerText = (curTime % audioDatas[0]?.duration).toFixed(2)
+                time.innerText = (curTime % audiosArray[0]?.duration).toFixed(2)
             }
 
             requestAnimationFrame(gameLoop)
         }
 
 
-
-
-        function decode(buffer, objSrc) {
-
-            actx.decodeAudioData(buffer, abuffer => {
-                let audio = { id: objSrc.id, src: objSrc.src, abuffer, srcNode: null, duration: abuffer.duration, muted: false }
-                createButton(audio)
-                audioDatas.push(audio)
-            });
-        }
-
-        // Sets up a new source node as needed as stopping will render current invalid
-        function playLoop(audio) {
-
-            timer = performance.now()
-
-
-
-            let srcNode = actx.createBufferSource();  // create audio source
-            srcNode.buffer = audio.abuffer;             // use decoded buffer
-            srcNode.connect(actx.destination);    // create output
-            srcNode.loop = true;                  // takes care of perfect looping
-            audio.srcNode = srcNode;  // create a reference for control buttons
-            srcNode.start(0, 0);                      // play...
-
-
-
-
-
-            let gainNode = actx.createGain()
-            // gainNode.gain.value =1 // 10 %
-            gainNode.connect(actx.destination)
-
-            // now instead of connecting to aCtx.destination, connect to the gainNode
-            srcNode.connect(gainNode)
-            audio.gainNode = gainNode
-        }
 
 
     </script>
