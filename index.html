@@ -1,13 +1,22 @@
 <html>
 
 <head>
+    <style>
+        .muteButton {
+            display: block;
+            margin: 10px
+        }
 
+        body {
+            padding: 10px;
+        }
+    </style>
 </head>
 
 <body onload="init()">
 
     <button id="playBut" onclick="playAll()">play</button>
-
+    <br><br>
     <div id="buttonContainer">
 
 
@@ -20,18 +29,18 @@
 
         var timer = 0
         var actx = new (AudioContext || webkitAudioContext)()
-        var srcs = ["80.wav", "120.wav", "160.wav"]
+        var srcs = [{ id: "piano", src: "wavs/!piano.wav" }, { id: "percu", src: "wavs/!percu.wav" }, { id: "bajo", src: "wavs/!bajo.wav" }]
         var audioDatas = []
         var time = document.querySelector("#time")
         var playing = false
         // var srcNodes = [] // global so we can access them from handlers
         function init() {
-            for (let src of srcs) {
+            for (let obj of srcs) {
 
-                createButton(src)
 
-                fetch(src, { mode: "cors" }).then((resp) => { return resp.arrayBuffer() }).then(buffer => {
-                    decode(buffer, src)
+
+                fetch(obj.src, { mode: "cors" }).then((resp) => { return resp.arrayBuffer() }).then(buffer => {
+                    decode(buffer, obj)
                 });
             }
 
@@ -59,27 +68,31 @@
         }
 
 
-        function createButton(src) {
-            let strippedSrc =  src.split(".")[0]
-            document.querySelector("#buttonContainer").innerHTML += `<button onclick="mute('${strippedSrc}', this)" class="muteButton file_${strippedSrc}"> mute ${strippedSrc}</button>`
+        function createButton(audio) {
+
+
+            document.querySelector("#buttonContainer").innerHTML += `   <button onclick="mute('${audio.id}', this)" class="muteButton file_${audio.id}"> MUTE ${audio.id}</button> duration:${audio.duration}`
         }
-        function mute(strippedSrc, button) {
 
-            console.log(strippedSrc, button)
 
-            let audio = audioDatas.filter(k => k.src == strippedSrc)[0]
 
-            if(!audio){
-                return console.warn(strippedSrc+" COULD NOT BE MUTED")
+        function mute(id, button) {
+
+            
+
+            let audio = audioDatas.filter(k => k.id == id)[0]
+
+            if (!audio) {
+                return console.warn(audio.id + " COULD NOT BE MUTED")
             }
 
 
             if (audio.muted) {
                 audio.gainNode.gain.value = 1
-                button.innerText = "mute " + strippedSrc
+                button.innerText = "MUTE  " + audio.id
             } else {
                 audio.gainNode.gain.value = -1
-                button.innerText = "unmute "+ strippedSrc 
+                button.innerText = "UNMUTE " + audio.id
             }
 
 
@@ -104,10 +117,11 @@
 
 
 
-        function decode(buffer, src) {
+        function decode(buffer, objSrc) {
 
             actx.decodeAudioData(buffer, abuffer => {
-                let audio = { src: src.split(".")[0], abuffer, srcNode: null, duration: abuffer.duration, muted: false }
+                let audio = { id: objSrc.id, src: objSrc.src, abuffer, srcNode: null, duration: abuffer.duration, muted: false }
+                createButton(audio)
                 audioDatas.push(audio)
             });
         }
