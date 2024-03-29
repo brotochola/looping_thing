@@ -14,7 +14,7 @@ const OfflineContext =
    * Schedule the sound to start playing at time:0
    */
 
-  source.start(0);
+  source.start(2);
 
   /**
    * Pipe the source through the program
@@ -82,7 +82,7 @@ function findPeaks(data) {
   let peaks = [];
   let threshold = 0.9;
   const minThresold = 0.3;
-  const minPeaks = 15;
+  const minPeaks = 40;
 
   /**
    * Keep looking for peaks lowering the threshold until

@@ -145,10 +145,11 @@
                     playBut.innerText = "Play";
                     playing = false
                 } else {
-                    // debugger
-                    playing = true
+                    // debugger                  
                     audio.playLoop()
                     playBut.innerText = "Stop";
+                    playing = true
+                    timer=performance.now()
                 }
             }
 
