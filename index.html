@@ -142,7 +142,7 @@
             for (let audio of audiosArray) {
                 if (audio.srcNode) {
                     audio.srcNode.stop();
-                    audio.srcNode = null;
+                    audio.stopNode()
                     playBut.innerText = "Play";
                     playing = false
                 } else {

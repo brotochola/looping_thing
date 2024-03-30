@@ -111,10 +111,17 @@ class Track {
       }
     }
   }
+
+  stopNode(){
+    this.gainNode.disconnect()
+    this.srcNode.disconnect()   
+    this.srcNode=null
+    this.gainNode=null
+  }
   playLoop() {
     this.timer = performance.now();
-
-    let srcNode = actx.createBufferSource(); // create audio source
+    
+    let srcNode = actx.createBufferSource(); // create audio source    
     srcNode.buffer = this.abuffer; // use decoded buffer
     srcNode.connect(actx.destination); // create output
     srcNode.loop = true; // takes care of perfect looping
