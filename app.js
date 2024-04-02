@@ -63,9 +63,16 @@ class MultiTrack {
 
     if (e.target.id == "loopFrom") {
       this.loopFrom = !isNaN(value) && e.target.value != "" ? value : 0;
+      for(let audio of this.audiosArray){
+        audio.changeLoopFrom(this.loopFrom)
+      }
     } else if (e.target.id == "loopTo") {
       this.loopTo =
         !isNaN(value) && e.target.value != "" ? value : this.shortestTrack;
+
+    for(let audio of this.audiosArray){
+            audio.changeLoopTo(this.loopTo)
+          }
     }
 
     this.playPauseAll()
@@ -133,7 +140,7 @@ class MultiTrack {
         (curTime % (this.loopTo - this.loopFrom)) + this.loopFrom;
       if (moddedCurTime) {
         this.currentTime =
-          this.makeSureTimeDoesntGoBeyondLoopLimits(moddedCurTime);
+        this.makeSureTimeDoesntGoBeyondLoopLimits(moddedCurTime);
         this.makeAllTracksSeekToTime(this.currentTime);
         this.time.innerText = this.currentTime.toFixed(2);
       }

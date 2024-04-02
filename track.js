@@ -47,6 +47,28 @@ class Track {
     });
 
     this.peaks.on("overview.click", (e) => this.handleClickOnWaveForm(e));
+
+    this.peaks.points.add([
+      {
+        time: 0,
+        labelText: "loop from",
+        color: "#666",
+      },
+      {
+        time: this.duration,
+        labelText: "loop to",
+        color: "#666",
+      },
+    ]);
+  }
+
+  changeLoopFrom(val) {
+    let points = this.peaks.points.getPoints();
+    points[0].update({ time: val });
+  }
+  changeLoopTo(val) {
+    let points = this.peaks.points.getPoints();
+    points[1].update({ time: val });
   }
   changeVerticalZoom(variation) {
     this.verticalZoom += variation;
@@ -57,6 +79,7 @@ class Track {
     this.multitrackInstance.currentTime = e.time;
     this.multitrackInstance.makeAllTracksSeekToTime(e.time);
     this.multitrackInstance.playPauseAll();
+    this.multitrackInstance.gameLoop();
     setTimeout(() => this.multitrackInstance.playPauseAll(), 1);
   }
 
