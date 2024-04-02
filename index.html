@@ -18,8 +18,9 @@
         }
 
         .waveform {
-            width: 50vw;
+            width: calc(100vw - 800px);
             height: 70px;
+            border:1px solid gray;
         }
 
         * {
@@ -84,6 +85,9 @@
         .track .volumeInput {
             margin-left: 20px;
         }
+        .track .panInput {
+            width:50px
+        }
 
         #trackContainer {
             display: flex;
@@ -103,9 +107,9 @@
     <button id="playButton" onclick="app.playPauseAll()">Play</button>
     <p>current time: <span id="time"></span></p>
     <button id="addTrack" onclick="app.addTrack()"> Add Track</button>
-    <input type="file" accept="audio" id="fileInput" onchange="app.handleFileChange(event)" />
+    <input type="file" accept="audio" id="fileInput" onchange="app.handleFileChange(event)" multiple/>
     <br><br>
-    <audio src="wavs/sesion/gtr.wav"></audio>
+    
     <div id="trackContainer">
 
 

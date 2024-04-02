@@ -11,7 +11,7 @@ class MultiTrack {
     this.time = document.querySelector("#time");
     this.fileInput = document.querySelector("#fileInput");
     this.trackcontainer = document.querySelector("#trackContainer");
-    this.playBut= document.querySelector("#playButton");
+    this.playBut = document.querySelector("#playButton");
     this.srcs = srcs;
     for (let obj of srcs) {
       this.audiosArray.push(
@@ -44,15 +44,24 @@ class MultiTrack {
   }
 
   handleFileChange(e) {
-    let reader = new FileReader();
-    reader.onload = () => {
-      let arrayBuffer = reader.result;
-      let id = this.fileInput.files[0].name;
-      this.audiosArray.push(
-        new Track(id, null, this.actx, this.trackcontainer, arrayBuffer,this)
-      );
-    };
-    reader.readAsArrayBuffer(fileInput.files[0]);
+    for (let file of this.fileInput.files) {
+      let reader = new FileReader();
+      reader.onload = () => {
+        let id = file.name;
+        this.audiosArray.push(
+          new Track(
+            id,
+            null,
+            this.actx,
+            this.trackcontainer,
+            reader.result,
+            this
+          )
+        );
+      };
+
+      reader.readAsArrayBuffer(file);
+    }
 
     if (this.playing) {
       playPauseAll();

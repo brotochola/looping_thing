@@ -1,14 +1,16 @@
 class Track {
   constructor(id, src, actx, container, arrayBuffer, multitrackInstance) {
-    this.multitrackInstance=multitrackInstance;
+    this.multitrackInstance = multitrackInstance;
     this.container = container;
     this.actx = actx;
     this.id = id;
     this.src = src;
     this.muted = false;
     this.srcNode = null;
+    this.pan = 0;
     this.lastVolumeValue = 1;
     this.verticalZoom = 1;
+    this.mutedVolume = 0
 
     if (arrayBuffer) {
       this.decode(arrayBuffer);
@@ -50,11 +52,10 @@ class Track {
   }
 
   handleClickOnWaveForm(e) {
-    
     this.multitrackInstance.currentTime = e.time;
     this.multitrackInstance.makeAllTracksSeekToTime(e.time);
-    this.multitrackInstance.playPauseAll()
-    setTimeout(()=>this.multitrackInstance.playPauseAll(),1)
+    this.multitrackInstance.playPauseAll();
+    setTimeout(() => this.multitrackInstance.playPauseAll(), 1);
   }
 
   mute() {
@@ -64,8 +65,8 @@ class Track {
         ((this.gainNode || {}).gain || {}).value || this.lastVolumeValue;
     } else {
       // this.lastVolumeValue = ((this.gainNode || {}).gain || {}).value || 1;
-      ((this.gainNode || {}).gain || {}).value = -1;
-      this.volumeInput.value = -1;
+      ((this.gainNode || {}).gain || {}).value = this.mutedVolume;
+      this.volumeInput.value = this.mutedVolume;
     }
 
     this.muted = !this.muted;
@@ -98,7 +99,7 @@ class Track {
 
     this.labelDuration = document.createElement("span");
     this.labelDuration.classList.add("labelDuration");
-    this.labelDuration.innerText = this.duration.toString() + "'";
+    this.labelDuration.innerText = this.duration.toFixed(2) + "''";
 
     this.removeButton = document.createElement("button");
     this.removeButton.classList.add("removeButton");
@@ -120,9 +121,9 @@ class Track {
     this.volumeInput.classList.add("volumeInput");
     this.volumeInput.oninput = (e) => this.handleChangeVolume(e);
     this.volumeInput.max = 1;
-    this.volumeInput.min = -1;
+    this.volumeInput.min = this.mutedVolume;
     this.volumeInput.step = 0.01;
-    this.volumeInput.value = 1;
+    this.volumeInput.value = "1";
 
     this.waveform = document.createElement("div");
     this.waveform.classList.add("waveform");
@@ -137,6 +138,16 @@ class Track {
     this.zoomInButton.classList.add("zoomButton");
     this.zoomOutButton.classList.add("zoomButton");
 
+    this.panInput = document.createElement("input");
+    this.panInput.type = "range";
+    this.panInput.classList.add("panInput");
+    this.panInput.oninput = (e) => this.handleChangePan(e);
+    this.panInput.max = 1;
+    this.panInput.min = -1;
+    this.panInput.step = 0.01;
+    this.panInput.value = "0";
+    this.panInput.ondblclick = () => (this.panInput.value = "0");
+
     // this.bpmLabel = document.createElement("span");
     // this.bpmLabel.classList.add("bpmLabel");
     // this.bpmLabel.innerHTML = this.detectedBPM?this.detectedBPM + " BPM":""
@@ -146,6 +157,7 @@ class Track {
     this.div.appendChild(this.button);
     this.div.appendChild(this.labelDuration);
     this.div.appendChild(this.volumeInput);
+    this.div.appendChild(this.panInput);
     this.div.appendChild(this.waveform);
     this.div.appendChild(this.zoomInButton);
     this.div.appendChild(this.zoomOutButton);
@@ -162,8 +174,13 @@ class Track {
     ((this.gainNode || {}).gain || {}).value = e.target.value;
     this.lastVolumeValue = e.target.value;
   }
+
+  handleChangePan(e) {
+    this.pan = Number(e.target.value);
+    ((this.panNode || {}).pan || {}).value = this.pan;
+  }
   remove() {
-    this.peaks.destroy()
+    this.peaks.destroy();
     if (this.multitrackInstance.playing) {
       this.multitrackInstance.playPauseAll();
     }
@@ -180,7 +197,6 @@ class Track {
     for (let key of Object.keys(this)) {
       this[key] = undefined;
     }
-   
   }
 
   stopNode() {
@@ -192,23 +208,23 @@ class Track {
   playLoop(time) {
     this.timer = performance.now();
 
-    let srcNode = this.actx.createBufferSource(); // create audio source
-    srcNode.buffer = this.audioBuffer; // use decoded buffer
-    srcNode.connect(this.actx.destination); // create output
-    srcNode.loop = true; // takes care of perfect looping
-    this.srcNode = srcNode; // create a reference for control buttons
+    this.srcNode = this.actx.createBufferSource(); // create audio source
+    this.srcNode.buffer = this.audioBuffer; // use decoded buffer
+    
+    this.srcNode.loop = true; // takes care of perfect looping
 
     // srcNode.playbackRate.value = 0.5;
 
-    srcNode.start(0, time || 0);
+    this.srcNode.start(0, time || 0);
     this.audioElement.currentTime = time || 0;
 
-    let gainNode = this.actx.createGain();
-    gainNode.gain.value = this.muted?-1: this.lastVolumeValue
-    gainNode.connect(this.actx.destination);
+    this.gainNode = this.actx.createGain();
+    this.panNode = this.actx.createStereoPanner()
+    this.gainNode.gain.value = this.muted ? -1 : this.lastVolumeValue;
 
-    // now instead of connecting to aCtx.destination, connect to the gainNode
-    srcNode.connect(gainNode);
-    this.gainNode = gainNode;
+    this.srcNode
+      .connect(this.panNode)
+      .connect(this.gainNode)
+      .connect(this.actx.destination);
   }
 }
