@@ -20,7 +20,12 @@
         .waveform {
             width: calc(100vw - 800px);
             height: 70px;
-            border:1px solid gray;
+            border: 1px solid #dddddd;
+            margin-left: 15px;
+            margin-right: 15px;
+            border-radius: 5px;
+            overflow:hidden;
+            
         }
 
         * {
@@ -85,8 +90,9 @@
         .track .volumeInput {
             margin-left: 20px;
         }
+
         .track .panInput {
-            width:50px
+            width: 50px
         }
 
         #trackContainer {
@@ -107,9 +113,13 @@
     <button id="playButton" onclick="app.playPauseAll()">Play</button>
     <p>current time: <span id="time"></span></p>
     <button id="addTrack" onclick="app.addTrack()"> Add Track</button>
-    <input type="file" accept="audio" id="fileInput" onchange="app.handleFileChange(event)" multiple/>
+    <input type="file" accept="audio" id="fileInput" onchange="app.handleFileChange(event)" multiple />
+    <div id="loopInfo">
+        <p>loop from <input id="loopFrom" value="0" onchange="app.handleLoopChange(event)">
+        loop to <input id="loopTo" onchange="app.handleLoopChange(event)"></p>
+    </div>
     <br><br>
-    
+
     <div id="trackContainer">
 
 

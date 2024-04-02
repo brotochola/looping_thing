@@ -1,5 +1,7 @@
 class Track {
-  constructor(id, src, actx, container, arrayBuffer, multitrackInstance) {
+  constructor(id, src, actx, container, arrayBuffer, multitrackInstance, cb) {
+    if (cb instanceof Function) this.cb = cb;
+
     this.multitrackInstance = multitrackInstance;
     this.container = container;
     this.actx = actx;
@@ -10,7 +12,7 @@ class Track {
     this.pan = 0;
     this.lastVolumeValue = 1;
     this.verticalZoom = 1;
-    this.mutedVolume = 0
+    this.mutedVolume = 0;
 
     if (arrayBuffer) {
       this.decode(arrayBuffer);
@@ -73,12 +75,13 @@ class Track {
     this.div.classList.toggle("muted", this.muted);
   }
 
-  decode(buffer) {
+  decode(buffer, cb) {
     this.arrayBuffer = buffer;
     this.actx.decodeAudioData(buffer, (audioBuffer) => {
       this.audioBuffer = audioBuffer;
 
       this.duration = audioBuffer.duration;
+      if (this.cb instanceof Function) this.cb(this.duration);
       this.createTrackElements();
     });
   }
@@ -209,8 +212,12 @@ class Track {
     this.timer = performance.now();
 
     this.srcNode = this.actx.createBufferSource(); // create audio source
+
+    this.srcNode.loopStart = this.multitrackInstance.loopFrom;
+    this.srcNode.loopEnd = this.multitrackInstance.loopTo || null;
+
     this.srcNode.buffer = this.audioBuffer; // use decoded buffer
-    
+
     this.srcNode.loop = true; // takes care of perfect looping
 
     // srcNode.playbackRate.value = 0.5;
@@ -219,7 +226,7 @@ class Track {
     this.audioElement.currentTime = time || 0;
 
     this.gainNode = this.actx.createGain();
-    this.panNode = this.actx.createStereoPanner()
+    this.panNode = this.actx.createStereoPanner();
     this.gainNode.gain.value = this.muted ? -1 : this.lastVolumeValue;
 
     this.srcNode
