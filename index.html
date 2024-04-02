@@ -1,13 +1,27 @@
 <html>
 
 <head>
-    
-    <script src="https://unpkg.com/realtime-bpm-analyzer@4.0.0/dist/index.js"></script>
+
+    <!-- <script src="https://unpkg.com/realtime-bpm-analyzer@4.0.0/dist/index.js"></script> -->
+    <!-- <script src="https://unpkg.com/audioworklet-polyfill/dist/audioworklet-polyfill.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/wavesurfer/dist/wavesurfer.min.js"></script> -->
+    <script src="utils.js"></script>
+
+    <script src="https://unpkg.com/peaks.js/dist/peaks.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap"
         rel="stylesheet">
     <style>
+        audio {
+            /* display: none; */
+        }
+
+        .waveform {
+            width: 50vw;
+            height: 70px;
+        }
+
         * {
             font-family: Noto Sans;
         }
@@ -44,7 +58,8 @@
             text-transform: capitalize;
         }
 
-        .track .removeButton {
+        .track .removeButton,
+        .track .zoomButton {
             background-color: darkred;
             color: white;
             font-weight: bold;
@@ -53,6 +68,11 @@
             height: 30px;
             width: 30px;
             cursor: pointer;
+        }
+
+        .track .zoomButton {
+            background-color: darkgreen;
+            margin-left: 5px;
         }
 
         .track.muted .muteButton {
@@ -80,11 +100,12 @@
 
 <body onload="init()">
 
-    <button id="playBut" onclick="playPauseAll()">Play</button>
+    <button id="playButton" onclick="app.playPauseAll()">Play</button>
     <p>current time: <span id="time"></span></p>
-    <button id="addTrack" onclick="addTrack()"> Add Track</button>
-    <input type="file" accept="audio" id="fileInput" onchange="handleFileChange(event)" />
+    <button id="addTrack" onclick="app.addTrack()"> Add Track</button>
+    <input type="file" accept="audio" id="fileInput" onchange="app.handleFileChange(event)" />
     <br><br>
+    <audio src="wavs/sesion/gtr.wav"></audio>
     <div id="trackContainer">
 
 
@@ -92,123 +113,31 @@
     </div>
 
 
+    <div id="overview-container"></div>
 
     <script src="track.js"></script>
+    <script src="app.js"></script>
 
     <script>
-
-        var timer = 0
-        var actx = new (AudioContext || webkitAudioContext)()
-        var srcs = [
-            { id: "piano", src: "wavs/!piano.wav" },
-            { id: "percu", src: "wavs/!percu.wav" },
-            { id: "bajo", src: "wavs/!bajo.wav" },
-            //  { id: "piano2", src: "wavs/!piano.wav" },
-            //  { id: "piano3", src: "wavs/!piano.wav" },
-            //  { id: "piano4", src: "wavs/!piano.wav" },
-            //  { id: "piano5", src: "wavs/!piano.wav" },
-            //  { id: "piano6", src: "wavs/!piano.wav" },
-            //  { id: "piano7", src: "wavs/!piano.wav" },
-            //  { id: "percu2", src: "wavs/!percu.wav" }, 
-            //  { id: "bajo2", src: "wavs/!bajo.wav" }
-        ]
-        var audiosArray = []
-        var time = document.querySelector("#time")
-        var fileInput = document.querySelector("#fileInput")
-        var trackcontainer = document.querySelector("#trackContainer")
-        var playing = false
-
-
-
-
+        var app
         function init() {
-
-
-            for (let obj of srcs) {
-                audiosArray.push(new Track(obj.id, obj.src, actx, trackcontainer))
-                // fetch(obj.src, { mode: "cors" }).then(resp => resp.arrayBuffer()).then(buffer => {
-                //     decode(buffer, obj)
-                // });
-            }
-
-
-
-
-            gameLoop()
-
+            let srcs = [
+                { id: "piano", src: "wavs/!piano.wav" },
+                { id: "percu", src: "wavs/!percu.wav" },
+                { id: "bajo", src: "wavs/!bajo.wav" },
+                //  { id: "piano2", src: "wavs/!piano.wav" },
+                //  { id: "piano3", src: "wavs/!piano.wav" },
+                //  { id: "piano4", src: "wavs/!piano.wav" },
+                //  { id: "piano5", src: "wavs/!piano.wav" },
+                //  { id: "piano6", src: "wavs/!piano.wav" },
+                //  { id: "piano7", src: "wavs/!piano.wav" },
+                //  { id: "percu2", src: "wavs/!percu.wav" },
+                //  { id: "bajo2", src: "wavs/!bajo.wav" }
+            ];
+            app = new MultiTrack(srcs)
         }
-
-        function playPauseAll() {
-            for (let audio of audiosArray) {
-                if (audio.srcNode) {
-                    audio.srcNode.stop();
-                    audio.stopNode()
-                    playBut.innerText = "Play";
-                    playing = false
-                } else {
-                    // debugger                  
-                    audio.playLoop()
-                    playBut.innerText = "Stop";
-                    playing = true
-                    timer=performance.now()
-                }
-            }
-
-        }
-
-        function handleFileChange(e) {
-
-
-
-            let reader = new FileReader();
-            reader.onload = () => {
-
-                let arrayBuffer = reader.result;
-                let id = fileInput.files[0].name
-                audiosArray.push(new Track(id, null, actx, trackcontainer, arrayBuffer))
-
-            }
-            reader.readAsArrayBuffer(fileInput.files[0]);
-
-            if (playing) {
-                playPauseAll()
-            }
-
-        }
-        function addTrack() {
-            fileInput.click()
-        }
-
-
-        function mute(id) {
-            let audio = audiosArray.filter(k => k.id == id)[0]
-
-            if (!audio) {
-                return console.warn(audio.id + " COULD NOT BE MUTED")
-            }
-
-            audio.mute()
-
-        }
-
-        function gameLoop() {
-
-            if (!playing) {
-                time.innerHTML = null
-
-            } else {
-                let curTime = (performance.now() - timer) / 1000
-
-                time.innerText = (curTime % audiosArray[0]?.duration).toFixed(2)
-            }
-
-            requestAnimationFrame(gameLoop)
-        }
-
-
-
-
     </script>
+
 </body>
 
 </html>
