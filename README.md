@@ -1,3 +1,6 @@
+https://brotochola.github.io/looping_thing/
+
+
 # looping_thing
 Playing around with the audiobuffer thing to make audios loop for real.
 This started with the question "can i make audios loop with no gaps on the browser?" -yes, you can.
